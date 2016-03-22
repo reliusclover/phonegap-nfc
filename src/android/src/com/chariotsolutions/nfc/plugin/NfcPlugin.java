@@ -236,6 +236,7 @@ public class NfcPlugin extends CordovaPlugin implements NfcAdapter.OnNdefPushCom
     private void writeTag(JSONArray data, CallbackContext callbackContext) throws JSONException {
         if (getIntent() == null) {  // TODO remove this and handle LostTag
             callbackContext.error("Failed to write tag, received null intent");
+            return;
         }
 
         Tag tag = savedIntent.getParcelableExtra(NfcAdapter.EXTRA_TAG);
@@ -249,7 +250,7 @@ public class NfcPlugin extends CordovaPlugin implements NfcAdapter.OnNdefPushCom
             public void run() {
                 try {
                     Ndef ndef = Ndef.get(tag);
-                    if (ndef != null) {
+                    if (ndef != null && !ndef.isConnected()) {
                         ndef.connect();
 
                         if (ndef.isWritable()) {
@@ -282,6 +283,9 @@ public class NfcPlugin extends CordovaPlugin implements NfcAdapter.OnNdefPushCom
                     callbackContext.error(e.getMessage());
                 } catch (IOException e) {
                     callbackContext.error(e.getMessage());
+                } catch (IllegalStateException e) {
+                	callbackContext.error("Still writing!");
+                    Log.e(TAG, "Illegal State, still writing !");
                 }
             }
         });
@@ -412,7 +416,7 @@ public class NfcPlugin extends CordovaPlugin implements NfcAdapter.OnNdefPushCom
       while (iter.hasNext()) {
         IntentFilter intentFilter = iter.next();
         if (NfcAdapter.ACTION_TECH_DISCOVERED.equals(intentFilter.getAction(0))) {
-          intentFilters.remove(intentFilter);
+          iter.remove();
           removed = true;
         }
       }
@@ -429,7 +433,7 @@ public class NfcPlugin extends CordovaPlugin implements NfcAdapter.OnNdefPushCom
       while (iter.hasNext()) {
         IntentFilter intentFilter = iter.next();
         if (NfcAdapter.ACTION_TAG_DISCOVERED.equals(intentFilter.getAction(0))) {
-          intentFilters.remove(intentFilter);
+          iter.remove();
           removed = true;
         }
       }
@@ -571,10 +575,12 @@ public class NfcPlugin extends CordovaPlugin implements NfcAdapter.OnNdefPushCom
       Iterator<IntentFilter> iter = intentFilters.iterator();
       while (iter.hasNext()) {
         IntentFilter intentFilter = iter.next();
-        String mt = intentFilter.getDataType(0);
-        if (mimeType.equals(mt)) {
-          intentFilters.remove(intentFilter);
-          removed = true;
+        if(intentFilter.countDataTypes() > 0 ) {
+            String mt = intentFilter.getDataType(0);
+            if (mimeType.equals(mt)) {
+                iter.remove();
+                removed = true;
+            }
         }
       }
       return removed;
@@ -719,6 +725,13 @@ public class NfcPlugin extends CordovaPlugin implements NfcAdapter.OnNdefPushCom
         Log.d(TAG, "onResume " + getIntent());
         super.onResume(multitasking);
         startNfc();
+    }
+
+    @Override
+    public void onReset() {
+        super.onReset();
+        intentFilters.clear();
+        techLists.clear();
     }
 
     @Override
