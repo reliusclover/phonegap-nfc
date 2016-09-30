@@ -1,18 +1,5 @@
 package com.chariotsolutions.nfc.plugin;
 
-import java.io.IOException;
-import java.text.MessageFormat;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-
-// using wildcard imports so we can support Cordova 3.x
-import org.apache.cordova.*; // Cordova 3.x
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import android.app.Activity;
 import android.app.PendingIntent;
 import android.content.Intent;
@@ -30,6 +17,21 @@ import android.nfc.tech.Ndef;
 import android.nfc.tech.NdefFormatable;
 import android.os.Parcelable;
 import android.util.Log;
+
+import org.apache.cordova.CallbackContext;
+import org.apache.cordova.CordovaPlugin;
+import org.apache.cordova.PluginResult;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.IOException;
+import java.text.MessageFormat;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+
+// using wildcard imports so we can support Cordova 3.x
 
 public class NfcPlugin extends CordovaPlugin implements NfcAdapter.OnNdefPushCompleteCallback {
     private static final String REGISTER_MIME_TYPE = "registerMimeType";
@@ -622,7 +624,19 @@ public class NfcPlugin extends CordovaPlugin implements NfcAdapter.OnNdefPushCom
 
                 if (action.equals(NfcAdapter.ACTION_NDEF_DISCOVERED)) {
                     Ndef ndef = Ndef.get(tag);
-                    fireNdefEvent(NDEF_MIME, ndef, messages);
+                    boolean sendNdefMimeEvent = false;
+                    if(messages.length == 1){
+                        NdefMessage message = (NdefMessage) messages[0];
+                        for(NdefRecord record : message.getRecords()) {
+                            sendNdefMimeEvent = record.getTnf() == NdefRecord.TNF_MIME_MEDIA;
+                            break;
+                        }
+                    }
+                    if(sendNdefMimeEvent) {
+                        fireNdefEvent(NDEF_MIME, ndef, messages);
+                    }
+                    
+                    fireNdefEvent(NDEF, ndef, messages);
 
                 } else if (action.equals(NfcAdapter.ACTION_TECH_DISCOVERED)) {
                     for (String tagTech : tag.getTechList()) {
