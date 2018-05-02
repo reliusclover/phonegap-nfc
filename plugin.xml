@@ -42,7 +42,7 @@
 
 		</config-file>
 		
-		<config-file target="AndroidManifest.xml" parent="/manifest">
+		<config-file target="AndroidManifest.xml" parent="/manifest/application">
 			<network-security-config>  
 				  <base-config>  
 						<trust-anchors>  
