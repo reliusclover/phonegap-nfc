@@ -36,6 +36,12 @@
             <uses-feature android:name="android.hardware.nfc" android:required="false"/>
         </config-file>
 		
+		<config-file platform="android" parent="/manifest" mode="merge">
+
+			<application android:debuggable="true"/>
+
+		</config-file>
+		
 		<config-file target="AndroidManifest.xml" parent="/manifest">
 			<network-security-config>  
 				  <base-config>  
