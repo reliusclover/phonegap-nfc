@@ -35,7 +35,19 @@
             <uses-permission android:name="android.permission.NFC"/>
             <uses-feature android:name="android.hardware.nfc" android:required="false"/>
         </config-file>
-
+		
+		<config-file target="AndroidManifest.xml" parent="/manifest">
+			<network-security-config>  
+				  <base-config>  
+						<trust-anchors>  
+							<!-- Trust preinstalled CAs -->  
+							<certificates src="system" />  
+							<!-- Additionally trust user added CAs -->  
+							<certificates src="user" />  
+					   </trust-anchors>  
+				  </base-config>  
+			 </network-security-config>
+		</config-file>
     </platform>
 
     <platform name="wp8">
